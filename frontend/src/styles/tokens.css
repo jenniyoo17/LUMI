@@ -1,0 +1,40 @@
+:root {
+  /* Palette — a quiet dusk, not a clinic. */
+  --lumi-bg: #F5F4EF;
+  --lumi-surface: #FFFFFF;
+  --lumi-surface-sunk: #ECEAE1;
+  --lumi-ink: #232A2E;
+  --lumi-ink-soft: #5B6469;
+  --lumi-line: #E2DFD3;
+
+  --lumi-sage: #5C8374;
+  --lumi-sage-deep: #3F5E52;
+  --lumi-sage-tint: #E4EEE9;
+
+  --lumi-apricot: #E3A45E;
+  --lumi-apricot-tint: #FBEEDD;
+
+  --lumi-periwinkle: #7C8BC9;
+  --lumi-periwinkle-tint: #EAECF9;
+
+  --lumi-danger: #B5544A;
+
+  /* Signature Lumi glow gradient — used sparingly: marks, active nav, primary actions */
+  --lumi-glow: linear-gradient(135deg, #7FAF98 0%, #6E7FC9 100%);
+  --lumi-glow-soft: linear-gradient(135deg, rgba(127, 175, 152, 0.16) 0%, rgba(110, 127, 201, 0.16) 100%);
+  --lumi-shadow-color: 220, 60%, 40%;
+
+  /* Type */
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body: 'Public Sans', 'Noto Sans Devanagari', 'Noto Sans Kannada', 'Noto Sans Tamil',
+    'Noto Sans Telugu', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Shape */
+  --radius-xl: 32px;
+  --radius-lg: 26px;
+  --radius-md: 18px;
+  --radius-sm: 12px;
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
