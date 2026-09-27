@@ -8,6 +8,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api import chat as chat_router
 from app.api import data as data_router
 from app.api import health as health_router
 from app.api import memory as memory_router
@@ -38,3 +39,4 @@ def on_startup() -> None:
 app.include_router(health_router.router)
 app.include_router(data_router.router)
 app.include_router(memory_router.router)
+app.include_router(chat_router.router)

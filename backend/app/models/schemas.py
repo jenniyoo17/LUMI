@@ -143,10 +143,23 @@ class PermissionState(BaseModel):
 class ChatRequest(BaseModel):
     message: str
 
+    @field_validator("message")
+    @classmethod
+    def message_must_not_be_empty(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("message must not be empty")
+        return value
+
+
+class UsedContext(BaseModel):
+    label: str
+    sourceId: str
+
 
 class ChatResponse(BaseModel):
     response: str
-    used_context: list[str] = Field(default_factory=list)
+    used_context: list[UsedContext] = Field(default_factory=list)
     memory_ids: list[str] = Field(default_factory=list)
 
 

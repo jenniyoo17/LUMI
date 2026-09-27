@@ -1,8 +1,4 @@
-"""Central configuration, loaded from environment variables.
-
-Never hardcode secrets here. GEMINI_API_KEY is read at call time by the
-ai module, not stored anywhere else.
-"""
+"""Central configuration, loaded from environment variables."""
 
 from __future__ import annotations
 
@@ -20,11 +16,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SQLite database file. Overridable for tests (see tests/conftest use of
 # an in-memory or temp-file DB).
 DATABASE_PATH = os.getenv("LUMI_DATABASE_PATH", str(BASE_DIR / "lumi.db"))
-
-# Gemini API key — required only when actually calling the model (Phase 3).
-# Left unset during Phase 1/2 development; ai module handles that gracefully.
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
 # Memory importance threshold: candidate memories scoring below this are
 # discarded rather than stored (see app/memory).
