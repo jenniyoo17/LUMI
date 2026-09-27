@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import re
+
+from app.context.retrieval import get_relevant_notes
 from app.llm.groq_service import generate_response
 from app.memory.service import get_memories
 from app.models.schemas import ChatResponse, Memory, UsedContext
@@ -12,9 +14,9 @@ MAX_CONTEXT_MEMORIES = 5
 STOP_WORDS = frozenset(
     {"about", "after", "again", "could", "focus", "from", "have", "into", "just", "should", "that", "their", "them", "there", "these", "this", "today", "what", "when", "where", "which", "with", "would", "your"}
 )
-SYSTEM_PROMPT = """You are Lumi, a warm, natural, concise personal AI companion. The supplied memories belong to the user and are private. Use them only when relevant to the user's message. Do not invent personal facts or claim to know anything not present in the supplied context. Respect privacy and do not claim access to data that was not provided.
+SYSTEM_PROMPT = """You are Lumi, a warm, natural, concise personal AI companion. Supplied memories and notes context belong to the user and are private. Use them only when relevant to the user's message. Do not invent personal facts or claim to know anything not present in the supplied context. Respect privacy and do not claim access to data that was not provided.
 
-Return only a JSON object with exactly these fields: "response" (a conversational string) and "used_memory_ids" (an array of IDs for supplied memories that materially informed your response). Return an empty array if no supplied memory was used. Never include an ID that was not supplied."""
+Return only a JSON object with exactly these fields: "response" (a conversational string), "used_memory_ids" (an array of IDs for supplied memories that materially informed your response), and "used_data_ids" (an array of IDs for supplied notes context that materially informed your response). Return empty arrays when no corresponding context was used. Never include an ID that was not supplied."""
 
 
 class MalformedLLMResponseError(RuntimeError):
@@ -47,6 +49,7 @@ def _select_relevant_memories(message: str) -> list[Memory]:
 
 def chat(message: str) -> ChatResponse:
     memories = _select_relevant_memories(message)
+    notes_context = get_relevant_notes(message)
     serialized_memories = [
         {"id": memory.id, "content": memory.content, "sourceId": memory.source}
         for memory in memories
@@ -56,7 +59,11 @@ def chat(message: str) -> ChatResponse:
         {
             "role": "user",
             "content": json.dumps(
-                {"message": message, "memories": serialized_memories},
+                {
+                    "message": message,
+                    "memories": serialized_memories,
+                    "notes_context": notes_context,
+                },
                 ensure_ascii=True,
             ),
         },
@@ -67,22 +74,31 @@ def chat(message: str) -> ChatResponse:
         result = json.loads(raw_response)
         response_text = result["response"]
         used_ids = result["used_memory_ids"]
+        used_data_ids = result.get("used_data_ids", [])
         if (
             not isinstance(response_text, str)
             or not response_text.strip()
             or not isinstance(used_ids, list)
             or any(not isinstance(memory_id, str) for memory_id in used_ids)
+            or not isinstance(used_data_ids, list)
+            or any(not isinstance(data_id, str) for data_id in used_data_ids)
         ):
             raise ValueError("invalid chat fields")
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         raise MalformedLLMResponseError from exc
 
     memories_by_id = {memory.id: memory for memory in memories}
+    notes_by_id = {context["id"]: context for context in notes_context}
     used_context = [
         UsedContext(label=memories_by_id[memory_id].content, sourceId=memories_by_id[memory_id].source)
         for memory_id in dict.fromkeys(used_ids)
         if memory_id in memories_by_id
     ]
+    used_context.extend(
+        UsedContext(label=notes_by_id[data_id]["content"], sourceId="notes")
+        for data_id in dict.fromkeys(used_data_ids)
+        if data_id in notes_by_id
+    )
     return ChatResponse(
         response=response_text.strip(),
         used_context=used_context,

@@ -1,15 +1,13 @@
 """Ingest incoming personal data (POST /data).
 
-Permission is enforced twice in this backend, deliberately:
+Permission is enforced at both boundaries and again at use time:
 
-1. HERE, at write time: if the incoming item says permission=false, its
-   `data` payload is never persisted — only an empty audit row is kept,
-   mirroring device-hub's own build_permission_denied_result() shape.
-2. AGAIN, at read/use time (see app/context/retrieval.py): even a
-   previously-stored, previously-authorized item is excluded from AI
-   context if the source's CURRENT permission state is disabled. This
-   means revoking a permission in Settings takes effect immediately for
-   future conversations, without needing to delete old data.
+1. HERE, at write time: both the incoming Device Hub permission flag and
+    the backend's independent current permission must be enabled. Otherwise
+    the payload is discarded and only an empty audit row is retained.
+2. At read/use time (see app/context/retrieval.py): previously stored data
+    is excluded from AI context whenever the backend's current permission
+    is disabled, so revocation immediately affects future conversations.
 """
 
 from __future__ import annotations
@@ -19,12 +17,18 @@ import uuid
 
 from app.models.database import db_cursor
 from app.models.schemas import DataIngestResult, IncomingData
+from app.permissions.service import is_enabled
 
 
 def store_incoming_data(item: IncomingData) -> DataIngestResult:
     item_id = str(uuid.uuid4())
 
-    if not item.permission:
+    if not item.permission or not is_enabled(item.source):
+        reason = (
+            "permission denied by data item; not stored or used"
+            if not item.permission
+            else "backend permission disabled; not stored or used"
+        )
         # Never persist the actual content of a denied item. Keep a bare
         # audit trail only, same spirit as device-hub's denied result.
         with db_cursor() as cur:
@@ -35,7 +39,7 @@ def store_incoming_data(item: IncomingData) -> DataIngestResult:
             )
         return DataIngestResult(
             stored=False,
-            reason="permission denied by data item; not stored or used",
+            reason=reason,
             source=item.source,
             id=item_id,
         )
