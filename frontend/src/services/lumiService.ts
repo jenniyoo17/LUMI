@@ -1,5 +1,6 @@
 import type { ChatMessage, DataSource, DataSourceId, Memory } from '../types'
 import { mockApi } from './mockApi'
+import { realApi } from './realApi'
 
 /**
  * lumiService is the single boundary between UI code and "wherever the data
@@ -19,4 +20,5 @@ export interface LumiService {
   clearAllMemories(): Promise<Memory[]>
 }
 
-export const lumiService: LumiService = mockApi
+export const lumiService: LumiService =
+  import.meta.env.VITE_USE_MOCK_API === 'true' ? mockApi : realApi
