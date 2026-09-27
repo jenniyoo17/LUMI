@@ -7,11 +7,11 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 # Load a .env file if present (local dev convenience). Does nothing in
 # environments where the vars are already set (e.g. CI, containers).
-load_dotenv()
-
-BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 # SQLite database file. Overridable for tests (see tests/conftest use of
 # an in-memory or temp-file DB).

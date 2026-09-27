@@ -25,9 +25,8 @@ def generate_response(messages: list[dict[str, str]]) -> str:
 
         client = Groq(api_key=api_key)
         completion = client.chat.completions.create(
-            model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+            model=os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b"),
             messages=messages,
-            response_format={"type": "json_object"},
         )
         content = completion.choices[0].message.content
     except MissingGroqAPIKeyError:
