@@ -11,7 +11,7 @@ translation layer:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -170,6 +170,17 @@ class ChatResponse(BaseModel):
     response: str
     used_context: list[UsedContext] = Field(default_factory=list)
     memory_ids: list[str] = Field(default_factory=list)
+
+
+class ChatHistoryMessage(BaseModel):
+    id: str
+    role: Literal["user", "assistant"]
+    content: str
+    timestamp: datetime
+
+
+class ChatHistoryClearResult(BaseModel):
+    deleted_count: int
 
 
 # ---------------------------------------------------------------------------

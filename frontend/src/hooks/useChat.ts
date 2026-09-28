@@ -10,12 +10,16 @@ export function useChat() {
 
   useEffect(() => {
     mounted.current = true
-    lumiService.getMessages().then((data) => {
-      if (mounted.current) {
-        setMessages(data)
-        setLoading(false)
-      }
-    })
+    lumiService
+      .getChatHistory()
+      .catch(() => lumiService.getMessages())
+      .catch(() => [])
+      .then((data) => {
+        if (mounted.current) setMessages(data)
+      })
+      .finally(() => {
+        if (mounted.current) setLoading(false)
+      })
     return () => {
       mounted.current = false
     }

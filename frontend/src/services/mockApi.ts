@@ -99,6 +99,10 @@ export const mockApi = {
     return [...messages]
   },
 
+  getChatHistory(): Promise<ChatMessage[]> {
+    return this.getMessages()
+  },
+
   async sendMessage(text: string): Promise<{ userMessage: ChatMessage; lumiMessage: ChatMessage }> {
     const userMessage: ChatMessage = {
       id: `msg-${Date.now()}-u`,

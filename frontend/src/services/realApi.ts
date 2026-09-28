@@ -24,6 +24,13 @@ interface BackendMemory {
   timestamp: string
 }
 
+interface BackendChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: string
+}
+
 const PERMISSION_SOURCES: PermissionSource[] = ['notes', 'calendar', 'health', 'device', 'messages']
 
 function isPermissionMap(value: unknown): value is PermissionMap {
@@ -40,6 +47,17 @@ function isBackendMemory(value: unknown): value is BackendMemory {
     typeof memory.content === 'string' &&
     typeof memory.source === 'string' &&
     typeof memory.timestamp === 'string'
+  )
+}
+
+function isBackendChatMessage(value: unknown): value is BackendChatMessage {
+  if (typeof value !== 'object' || value === null) return false
+  const message = value as Record<string, unknown>
+  return (
+    typeof message.id === 'string' &&
+    (message.role === 'user' || message.role === 'assistant') &&
+    typeof message.content === 'string' &&
+    typeof message.timestamp === 'string'
   )
 }
 
@@ -112,6 +130,27 @@ export const realApi = {
 
   getMessages(): Promise<ChatMessage[]> {
     return mockApi.getMessages()
+  },
+
+  async getChatHistory(): Promise<ChatMessage[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/chat/history`)
+      if (!response.ok) throw new Error(`Chat history request failed (${response.status})`)
+
+      const body: unknown = await response.json()
+      if (!Array.isArray(body) || !body.every(isBackendChatMessage)) {
+        throw new Error('Chat history response was invalid')
+      }
+
+      return body.map((message) => ({
+        id: message.id,
+        role: message.role,
+        text: message.content,
+        timestamp: message.timestamp,
+      }))
+    } catch {
+      return mockApi.getChatHistory()
+    }
   },
 
   async sendMessage(text: string): Promise<{ userMessage: ChatMessage; lumiMessage: ChatMessage }> {

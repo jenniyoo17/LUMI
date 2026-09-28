@@ -16,6 +16,7 @@ export interface LumiService {
   getPermissions(): Promise<PermissionMap>
   setPermission(source: PermissionSource, enabled: boolean): Promise<{ source: PermissionSource; enabled: boolean }>
   getMessages(): Promise<ChatMessage[]>
+  getChatHistory(): Promise<ChatMessage[]>
   sendMessage(text: string): Promise<{ userMessage: ChatMessage; lumiMessage: ChatMessage }>
   getMemories(): Promise<Memory[]>
   deleteMemory(id: string): Promise<Memory[]>

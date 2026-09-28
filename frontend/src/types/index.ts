@@ -24,7 +24,7 @@ export interface DataSource {
   usage: string
 }
 
-export type ChatRole = 'user' | 'lumi'
+export type ChatRole = 'user' | 'lumi' | 'assistant'
 
 export interface ContextReference {
   /** e.g. "Calendar", "Normalization notes" — shown as a small pill under a Lumi message */

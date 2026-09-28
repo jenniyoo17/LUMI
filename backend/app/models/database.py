@@ -87,6 +87,20 @@ def init_db() -> None:
         )
         _ensure_column(cur, "memories", "user_id", f"TEXT NOT NULL DEFAULT '{DEMO_USER_ID}'")
 
+        # Conversation history is separate from personal memories and has no
+        # source permission semantics. It is scoped to the current user.
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS chat_messages (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
+                content TEXT NOT NULL,
+                timestamp TEXT NOT NULL
+            )
+            """
+        )
+
         # Per-source permission state. Defaults to disabled, same as
         # device-hub's PermissionManager, so a source is never usable
         # until the user explicitly opts in.
@@ -133,6 +147,13 @@ def reset_db() -> None:
     """Drop and recreate all tables. Used by tests for a clean slate."""
 
     with db_cursor() as cur:
-        for table in ("document_chunks", "documents", "memories", "data_items", "permissions"):
+        for table in (
+            "document_chunks",
+            "documents",
+            "chat_messages",
+            "memories",
+            "data_items",
+            "permissions",
+        ):
             cur.execute(f"DROP TABLE IF EXISTS {table}")
     init_db()
