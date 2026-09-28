@@ -73,7 +73,7 @@ def test_authorized_notes_travel_through_data_and_into_chat(client, monkeypatch)
         request_payload = json.loads(messages[1]["content"])
         captured.update(request_payload)
         used_data_ids = (
-            [request_payload["notes_context"][0]["id"]]
+            [request_payload["notes_context"][0]["id"], "unsupplied-notes-id"]
             if request_payload["notes_context"]
             else []
         )

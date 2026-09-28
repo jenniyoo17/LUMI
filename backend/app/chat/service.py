@@ -87,6 +87,7 @@ def chat(message: str) -> ChatResponse:
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         raise MalformedLLMResponseError from exc
 
+    # used_* IDs are model-reported attribution, constrained to context supplied above.
     memories_by_id = {memory.id: memory for memory in memories}
     data_by_id = {context["id"]: context for context in notes_context}
     used_context = [

@@ -38,7 +38,12 @@ def test_chat_passes_relevant_enabled_memory_and_reports_only_used(client, monke
     captured = []
     _mock_model(
         monkeypatch,
-        json.dumps({"response": "Let's review DBMS first.", "used_memory_ids": [relevant["id"]]}),
+        json.dumps(
+            {
+                "response": "Let's review DBMS first.",
+                "used_memory_ids": [relevant["id"], "unsupplied-memory-id"],
+            }
+        ),
         captured,
     )
 

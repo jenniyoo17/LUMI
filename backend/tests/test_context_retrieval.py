@@ -116,6 +116,73 @@ def test_non_positive_context_limit_returns_empty(client):
     assert get_relevant_context("DBMS", limit=0) == []
 
 
+def test_higher_scoring_calendar_ranks_above_newer_lower_scoring_note(client):
+    set_permission("notes", True)
+    set_permission("calendar", True)
+    _ingest_note(client, "alpha only", "2026-09-27T15:00:00+00:00")
+    _ingest_calendar(
+        client,
+        "alpha beta",
+        "2026-09-27T10:00:00",
+        "2026-09-27T12:00:00+00:00",
+    )
+
+    context = get_relevant_context("alpha beta")
+
+    assert context[0]["sourceId"] == "calendar"
+    assert context[0]["content"] == "alpha beta at 2026-09-27T10:00:00"
+
+
+def test_higher_scoring_note_ranks_above_newer_lower_scoring_calendar(client):
+    set_permission("notes", True)
+    set_permission("calendar", True)
+    _ingest_note(client, "alpha beta", "2026-09-27T10:00:00+00:00")
+    _ingest_calendar(
+        client,
+        "alpha only",
+        "2026-09-27T15:00:00",
+        "2026-09-27T15:00:00+00:00",
+    )
+
+    context = get_relevant_context("alpha beta")
+
+    assert context[0]["sourceId"] == "notes"
+    assert context[0]["content"] == "alpha beta"
+
+
+def test_equal_scores_use_timestamp_then_source_id_tie_breaker(client):
+    set_permission("notes", True)
+    set_permission("calendar", True)
+    timestamp = "2026-09-27T12:00:00+00:00"
+    _ingest_note(client, "alpha", timestamp)
+    _ingest_calendar(client, "alpha", "", timestamp)
+
+    first_result = get_relevant_context("alpha")
+    second_result = get_relevant_context("alpha")
+
+    assert first_result == second_result
+    assert [item["sourceId"] for item in first_result] == ["calendar", "notes"]
+
+
+def test_cross_source_results_never_exceed_five(client):
+    set_permission("notes", True)
+    set_permission("calendar", True)
+    for index in range(3):
+        _ingest_note(
+            client,
+            f"alpha note {index}",
+            f"2026-09-27T1{index}:00:00+00:00",
+        )
+        _ingest_calendar(
+            client,
+            f"alpha event {index}",
+            "",
+            f"2026-09-27T0{index}:00:00+00:00",
+        )
+
+    assert len(get_relevant_context("alpha")) == 5
+
+
 def test_relevant_calendar_event_returns_event_name_and_time_without_memory(client):
     set_permission("calendar", True)
     _ingest_calendar(
@@ -189,7 +256,7 @@ def test_chat_uses_calendar_context_and_reports_calendar_source(client, monkeypa
             {
                 "response": "Your DBMS exam is at 10:00.",
                 "used_memory_ids": [],
-                "used_data_ids": [calendar_id],
+                "used_data_ids": [calendar_id, "unsupplied-calendar-id"],
             }
         )
 
