@@ -1,4 +1,12 @@
-import type { ChatMessage, ContextReference, DataSource, DataSourceId, Memory } from '../types'
+import type {
+  ChatMessage,
+  ContextReference,
+  DataSource,
+  DataSourceId,
+  Memory,
+  PermissionMap,
+  PermissionSource,
+} from '../types'
 import {
   defaultReply,
   initialDataSources,
@@ -13,6 +21,7 @@ import {
 let dataSources: DataSource[] = initialDataSources.map((s) => ({ ...s }))
 let memories: Memory[] = [...initialMemories]
 let messages: ChatMessage[] = [...initialMessages]
+let deviceEnabled = false
 
 function enabledSourceIds(): DataSourceId[] {
   return dataSources.filter((s) => s.enabled).map((s) => s.id)
@@ -59,6 +68,30 @@ export const mockApi = {
     await wait(150)
     dataSources = dataSources.map((s) => (s.id === id ? { ...s, enabled } : s))
     return dataSources.map((s) => ({ ...s }))
+  },
+
+  async getPermissions(): Promise<PermissionMap> {
+    await wait(150)
+    return {
+      notes: dataSources.find((source) => source.id === 'notes')?.enabled ?? false,
+      calendar: dataSources.find((source) => source.id === 'calendar')?.enabled ?? false,
+      health: dataSources.find((source) => source.id === 'health')?.enabled ?? false,
+      device: deviceEnabled,
+      messages: dataSources.find((source) => source.id === 'messages')?.enabled ?? false,
+    }
+  },
+
+  async setPermission(
+    source: PermissionSource,
+    enabled: boolean,
+  ): Promise<{ source: PermissionSource; enabled: boolean }> {
+    await wait(150)
+    if (source === 'device') {
+      deviceEnabled = enabled
+    } else {
+      dataSources = dataSources.map((item) => (item.id === source ? { ...item, enabled } : item))
+    }
+    return { source, enabled }
   },
 
   async getMessages(): Promise<ChatMessage[]> {

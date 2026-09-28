@@ -12,6 +12,7 @@ from app.api import chat as chat_router
 from app.api import data as data_router
 from app.api import health as health_router
 from app.api import memory as memory_router
+from app.api import permissions as permissions_router
 from app.models.database import init_db
 
 app = FastAPI(
@@ -40,3 +41,4 @@ app.include_router(health_router.router)
 app.include_router(data_router.router)
 app.include_router(memory_router.router)
 app.include_router(chat_router.router)
+app.include_router(permissions_router.router)

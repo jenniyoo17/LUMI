@@ -1,4 +1,12 @@
-import type { ChatMessage, ContextReference, DataSource, DataSourceId, Memory } from '../types'
+import type {
+  ChatMessage,
+  ContextReference,
+  DataSource,
+  DataSourceId,
+  Memory,
+  PermissionMap,
+  PermissionSource,
+} from '../types'
 import { mockApi } from './mockApi'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -14,6 +22,14 @@ interface BackendMemory {
   content: string
   source: string
   timestamp: string
+}
+
+const PERMISSION_SOURCES: PermissionSource[] = ['notes', 'calendar', 'health', 'device', 'messages']
+
+function isPermissionMap(value: unknown): value is PermissionMap {
+  if (typeof value !== 'object' || value === null) return false
+  const permissions = value as Record<string, unknown>
+  return PERMISSION_SOURCES.every((source) => typeof permissions[source] === 'boolean')
 }
 
 function isBackendMemory(value: unknown): value is BackendMemory {
@@ -60,6 +76,38 @@ export const realApi = {
 
   setDataSourceEnabled(id: DataSourceId, enabled: boolean): Promise<DataSource[]> {
     return mockApi.setDataSourceEnabled(id, enabled)
+  },
+
+  async getPermissions(): Promise<PermissionMap> {
+    const response = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/permissions`)
+    if (!response.ok) throw new Error(`Permission request failed (${response.status})`)
+
+    const body: unknown = await response.json()
+    if (!isPermissionMap(body)) throw new Error('Permission response was invalid')
+    return body
+  },
+
+  async setPermission(
+    source: PermissionSource,
+    enabled: boolean,
+  ): Promise<{ source: PermissionSource; enabled: boolean }> {
+    const response = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/permissions/${source}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled }),
+    })
+    if (!response.ok) throw new Error(`Permission update failed (${response.status})`)
+
+    const body: unknown = await response.json()
+    if (
+      typeof body !== 'object' ||
+      body === null ||
+      (body as Record<string, unknown>).source !== source ||
+      typeof (body as Record<string, unknown>).enabled !== 'boolean'
+    ) {
+      throw new Error('Permission response was invalid')
+    }
+    return body as { source: PermissionSource; enabled: boolean }
   },
 
   getMessages(): Promise<ChatMessage[]> {

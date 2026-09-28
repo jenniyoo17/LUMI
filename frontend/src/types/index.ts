@@ -11,6 +11,10 @@ export type DataSourceId =
   | 'location'
   | 'messages'
 
+export type PermissionSource = 'notes' | 'calendar' | 'health' | 'device' | 'messages'
+
+export type PermissionMap = Record<PermissionSource, boolean>
+
 export interface DataSource {
   id: DataSourceId
   label: string

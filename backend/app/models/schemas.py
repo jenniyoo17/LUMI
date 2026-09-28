@@ -135,6 +135,15 @@ class PermissionState(BaseModel):
     permission: bool
 
 
+class PermissionToggle(BaseModel):
+    enabled: bool
+
+
+class PermissionUpdateResponse(BaseModel):
+    source: str
+    enabled: bool
+
+
 # ---------------------------------------------------------------------------
 # Chat
 # ---------------------------------------------------------------------------

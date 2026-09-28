@@ -1,4 +1,4 @@
-import type { ChatMessage, DataSource, DataSourceId, Memory } from '../types'
+import type { ChatMessage, DataSource, DataSourceId, Memory, PermissionMap, PermissionSource } from '../types'
 import { mockApi } from './mockApi'
 import { realApi } from './realApi'
 
@@ -13,6 +13,8 @@ import { realApi } from './realApi'
 export interface LumiService {
   getDataSources(): Promise<DataSource[]>
   setDataSourceEnabled(id: DataSourceId, enabled: boolean): Promise<DataSource[]>
+  getPermissions(): Promise<PermissionMap>
+  setPermission(source: PermissionSource, enabled: boolean): Promise<{ source: PermissionSource; enabled: boolean }>
   getMessages(): Promise<ChatMessage[]>
   sendMessage(text: string): Promise<{ userMessage: ChatMessage; lumiMessage: ChatMessage }>
   getMemories(): Promise<Memory[]>
